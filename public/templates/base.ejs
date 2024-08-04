@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+            <a href="/chat">Chat</a>
+        </nav>
+    </header>
+    <main>
+        <%- body %> <!-- Incluir el contenido específico aquí -->
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/socket.js"></script>
+</body>
+
+</html>

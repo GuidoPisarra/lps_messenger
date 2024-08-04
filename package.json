@@ -1,0 +1,31 @@
+{
+  "name": "lps_messenger",
+  "version": "1.0.0",
+  "description": "> npm init -y",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GuidoPisarra/lps_messenger.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GuidoPisarra/lps_messenger/issues"
+  },
+  "homepage": "https://github.com/GuidoPisarra/lps_messenger#readme",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.0",
+    "sequelize": "^6.37.3",
+    "socket.io": "^4.7.5",
+    "sqlite3": "^5.1.7"
+  }
+}
