@@ -1,12 +1,10 @@
-// Archivo: public/js/socket.js
-
 const socket = io();
 
-// Prompt for username
+// Pusuario (esto es provisorio)
 const username = prompt('Enter your username:');
 socket.emit('set username', username);
 
-// Handle form submission
+// submit mensaje
 document.getElementById('form').addEventListener('submit', function (e) {
     e.preventDefault();
     const input = document.getElementById('input');
@@ -17,7 +15,7 @@ document.getElementById('form').addEventListener('submit', function (e) {
     }
 });
 
-// Receive messages
+// mensajes recibidos
 socket.on('chat message', function (msg) {
     const item = document.createElement('li');
     item.classList.add('message');

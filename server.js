@@ -2,23 +2,23 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
-const bodyParser = require('body-parser'); // Necesario para procesar formularios
-const session = require('express-session'); // Necesario para manejar sesiones
+const bodyParser = require('body-parser');
+const session = require('express-session');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Middleware
+// Middlewares
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'your-secret-key', // Cambia esto por una clave secreta
+    secret: 'your-secret-key', // TODO Falta secret-key
     resave: false,
     saveUninitialized: true,
 }));
 
-// Configurar el motor de plantillas EJS
+// Configuracion del motor de plantillas EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'templates'));
 
@@ -37,7 +37,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    // Aquí deberías validar el usuario, este ejemplo es solo para ilustración
+    // TODO validar usuario
     req.session.user = { username };
     res.redirect('/chat');
 });
@@ -48,7 +48,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
     const { username, password, confirmPassword } = req.body;
-    // Aquí deberías validar el registro y almacenar el usuario, este ejemplo es solo para ilustración
+    // TODO validar registro y almacenar (creo que lo ultimo lo hace pero revisar)
     if (password === confirmPassword) {
         req.session.user = { username };
         res.redirect('/chat');

@@ -1,23 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <title>Chat</title>
-    <style>
-        /* Añade tus estilos aquí */
-    </style>
-</head>
-
-<body>
-    <h1>Chat</h1>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-        <input id="input" autocomplete="off" />
-        <button id="send">Send</button>
+<%- include('base', { title: 'Register' , body: ` <h1>Register</h1>
+    <form action="/register" method="POST">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <br>
+        <label for="repeatPassword">Repeat Password:</label>
+        <input type="password" id="repeatPassword" name="repeatPassword" required>
+        <br>
+        <button type="submit">Register</button>
     </form>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/js/socket.js"></script>
-</body>
-
-</html>
+    <a href="/">Login</a>
+    ` }) %>
