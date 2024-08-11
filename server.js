@@ -13,7 +13,7 @@ const io = socketIo(server);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'your-secret-key', // TODO Falta secret-key
+    secret: 'your-secret-key', // Cambia esto a una clave secreta segura
     resave: false,
     saveUninitialized: true,
 }));
@@ -65,6 +65,13 @@ app.get('/chat', (req, res) => {
     }
 });
 
+app.get('/user', (req, res) => {
+    if (req.session.user) {
+        res.json(req.session.user);
+    } else {
+        res.status(401).send('Unauthorized');
+    }
+});
 
 let users = {};
 
