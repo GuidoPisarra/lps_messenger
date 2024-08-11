@@ -9,6 +9,8 @@ const server = http.createServer(app);
 const io = socketIo(server);
 const sequelize = require('./config/database');
 const Message = require('./public/models/Message'); // Ajusta la ruta
+const User = require('./public/models/user'); // Ajusta la ruta
+
 
 // BBDD
 sequelize.authenticate()
@@ -81,7 +83,20 @@ app.get('/chat', (req, res) => {
         // Recuperar mensajes de la base de datos
         Message.findAll({ order: [['timestamp', 'ASC']] })
             .then(messages => {
-                res.render('chat', { username: req.session.user.username, messages });
+                // Recuperar usuarios de la base de datos
+                User.findAll() // Asegúrate de que `User` es el modelo correcto
+                    .then(users => {
+                        const filteredUsers = users.filter(user => user.username !== req.session.user.username);
+                        res.render('chat', {
+                            username: req.session.user.username,
+                            messages,
+                            users: filteredUsers
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Error fetching users:', err);
+                        res.status(500).send('Error fetching users');
+                    });
             })
             .catch(err => {
                 console.error('Error fetching messages:', err);

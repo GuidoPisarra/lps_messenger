@@ -14,34 +14,49 @@
             <% if (!username) { %>
                 <a href="/login">Login</a>
                 <a href="/register">Register</a>
+                <a href="/chat">Chat</a>
                 <% } %>
                     <% if (username) { %>
-                        <a href="/chat">Chat</a>
-                        <a href="/logout">Logout</a>
+                        <a href="/logout">Salir</a>
                         <% } %>
         </nav>
     </header>
     <main>
-        <h1>Chat</h1>
-        <ul id="messages">
-            <% messages.forEach(message=> { %>
-                <li class="message <%= message.userSend === username ? 'sent' : 'received' %>">
-                    <strong>
-                        <%= message.userSend %>:
-                    </strong>
-                    <%= message.text %>
-                </li>
-                <% }) %>
-        </ul>
-        <form id="form" action="">
-            <input type="hidden" id="username" value="<%= username %>">
-            <input type="text" id="recept" placeholder="Recipient username">
-            <input id="input" autocomplete="off" />
-            <button id="send">Send</button>
-        </form>
+        <div class="lista-usuarios">
+            <h2>Users</h2>
+            <ul id="user-list">
+                <% users.forEach(user=> { %>
+                    <li>
+                        <a href="#" onclick="startChat('<%= user.username %>')">
+                            <%= user.username %>
+                        </a>
+                    </li>
+                    <% }) %>
+            </ul>
+        </div>
+        <div class="pantalla-chat">
+            <h1>Chat <span id="usuario-chat"></span></h1>
+            <ul id="messages">
+                <% messages.forEach(message=> { %>
+                    <li class="message <%= message.userSend === username ? 'sent' : 'received' %>">
+                        <strong>
+                            <%= message.userSend %>:
+                        </strong>
+                        <%= message.text %>
+                    </li>
+                    <% }) %>
+            </ul>
+            <form id="form" action="">
+                <input type="hidden" id="username" value="<%= username %>">
+                <input type="hidden" type="text" id="recept" placeholder="Recipient username">
+                <input id="input" autocomplete="off" />
+                <button id="send">Send</button>
+            </form>
+        </div>
     </main>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/socket.js"></script>
+    <script src="../js/main.js"></script>
     <script>
         window.username = "<%= username %>";
     </script>

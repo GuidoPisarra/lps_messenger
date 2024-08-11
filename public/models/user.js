@@ -1,10 +1,5 @@
-const { Sequelize, DataTypes } = require('sequelize');
-const path = require('path');
-
-const sequelize = new Sequelize({
-    dialect: 'sqlite',
-    storage: path.join(__dirname, 'database.sqlite')
-});
+const { DataTypes } = require('sequelize');
+const sequelize = require('../../config/database');
 
 const User = sequelize.define('User', {
     username: {
@@ -20,4 +15,4 @@ const User = sequelize.define('User', {
 
 sequelize.sync();
 
-module.exports = { User };
+module.exports = User;

@@ -31,3 +31,4 @@ fetch('/user')
         console.error('Error fetching user:', error);
         window.location.href = '/login';
     });
+
