@@ -22,14 +22,14 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'templates'));
 
-// Rutas
-app.get('/', (req, res) => {
+app.get('', (req, res) => {
     if (req.session.user) {
         res.redirect('/chat');
     } else {
         res.render('index');
     }
 });
+// Rutas
 
 app.get('/login', (req, res) => {
     res.render('login');
@@ -59,7 +59,7 @@ app.post('/register', (req, res) => {
 
 app.get('/chat', (req, res) => {
     if (req.session.user) {
-        res.render('chat');
+        res.render('chat', { username: req.session.user.username });
     } else {
         res.redirect('/');
     }
