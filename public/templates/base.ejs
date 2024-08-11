@@ -11,9 +11,14 @@
 <body>
     <header>
         <nav>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-            <a href="/chat">Chat</a>
+            <% if (!username) { %>
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+                <% } %>
+                    <% if (username) { %>
+                        <a href="/chat">Chat</a>
+                        <a href="/logout">Logout</a>
+                        <% } %>
         </nav>
     </header>
     <main>
@@ -22,7 +27,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/socket.js"></script>
     <script>
-        window.username = "<%= username %>"; // Inyecta el nombre de usuario en una variable global
+        window.username = "<%= username %>";
     </script>
 </body>
 

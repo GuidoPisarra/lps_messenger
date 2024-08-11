@@ -1,8 +1,50 @@
-<%- include('base', { body: ` <h1>Chat</h1>
-    <ul id="messages"></ul>
-    <form id="form" action="">
-        <input type="hidden" id="username" value="username">
-        <input id="input" autocomplete="off" />
-        <button id="send">Send</button>
-    </form>
-    ` }) %>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <% if (!username) { %>
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+                <% } %>
+                    <% if (username) { %>
+                        <a href="/chat">Chat</a>
+                        <a href="/logout">Logout</a>
+                        <% } %>
+        </nav>
+    </header>
+    <main>
+        <h1>Chat</h1>
+        <ul id="messages">
+            <% messages.forEach(message=> { %>
+                <li class="message <%= message.userSend === username ? 'sent' : 'received' %>">
+                    <strong>
+                        <%= message.userSend %>:
+                    </strong>
+                    <%= message.text %>
+                </li>
+                <% }) %>
+        </ul>
+        <form id="form" action="">
+            <input type="hidden" id="username" value="<%= username %>">
+            <input type="text" id="recept" placeholder="Recipient username">
+            <input id="input" autocomplete="off" />
+            <button id="send">Send</button>
+        </form>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/socket.js"></script>
+    <script>
+        window.username = "<%= username %>";
+    </script>
+</body>
+
+</html>

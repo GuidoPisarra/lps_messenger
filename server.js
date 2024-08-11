@@ -4,16 +4,24 @@ const socketIo = require('socket.io');
 const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
-
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+const sequelize = require('./config/database');
+const Message = require('./public/models/Message'); // Ajusta la ruta
+
+// BBDD
+sequelize.authenticate()
+    .then(() => console.log('Conexión a la base de datos establecida correctamente.'))
+    .catch(err => console.error('Error conectando a la base de datos:', err));
+
+
 
 // Middlewares
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-    secret: 'your-secret-key', // Cambia esto a una clave secreta segura
+    secret: 'your-secret-key', //TODO Cambiar esto a una clave secreta segura
     resave: false,
     saveUninitialized: true,
 }));
@@ -22,6 +30,8 @@ app.use(session({
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'templates'));
 
+
+// Rutas
 app.get('', (req, res) => {
     if (req.session.user) {
         res.redirect('/chat');
@@ -29,10 +39,19 @@ app.get('', (req, res) => {
         res.render('index');
     }
 });
-// Rutas
 
 app.get('/login', (req, res) => {
     res.render('login');
+});
+
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.redirect('/');
+        }
+        res.redirect('/');
+    });
 });
 
 app.post('/login', (req, res) => {
@@ -59,7 +78,15 @@ app.post('/register', (req, res) => {
 
 app.get('/chat', (req, res) => {
     if (req.session.user) {
-        res.render('chat', { username: req.session.user.username });
+        // Recuperar mensajes de la base de datos
+        Message.findAll({ order: [['timestamp', 'ASC']] })
+            .then(messages => {
+                res.render('chat', { username: req.session.user.username, messages });
+            })
+            .catch(err => {
+                console.error('Error fetching messages:', err);
+                res.redirect('/');
+            });
     } else {
         res.redirect('/');
     }
@@ -74,25 +101,45 @@ app.get('/user', (req, res) => {
 });
 
 let users = {};
+let userSocketIds = {};
 
+// Manejo del socket
 io.on('connection', (socket) => {
     console.log('Nuevo usuario conectado');
 
+    // Asignar nombre de usuario al socket
     socket.on('set username', (username) => {
-        users[socket.id] = username;
-        io.emit('update users', Object.values(users));
+        userSocketIds[username] = socket.id;
+        io.emit('update users', Object.keys(userSocketIds));
     });
 
+    // Manejo del mensaje
     socket.on('chat message', (msg) => {
-        io.emit('chat message', { text: msg.text, user: users[socket.id] });
+        const message = {
+            text: msg.text,
+            userSend: msg.userSend,
+            userRecept: msg.userRecept
+        };
+
+        // Guarda el mensaje en la base de datos
+        Message.create(message)
+            .then(() => {
+                io.emit('chat message', message);
+            })
+            .catch(err => console.error('Error saving message:', err));
     });
 
+    // Manejo de desconexión
     socket.on('disconnect', () => {
-        delete users[socket.id];
-        io.emit('update users', Object.values(users));
+        const username = Object.keys(userSocketIds).find(key => userSocketIds[key] === socket.id);
+        if (username) {
+            delete userSocketIds[username];
+            io.emit('update users', Object.keys(userSocketIds));
+        }
         console.log('Usuario desconectado');
     });
 });
+
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

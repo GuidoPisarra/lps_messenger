@@ -1,34 +1,33 @@
 const socket = io();
 
-// Obtener el nombre de usuario desde el servidor
 fetch('/user')
     .then(response => response.json())
     .then(data => {
-        const username = data.username; // Obtén el nombre de usuario desde la respuesta
+        const username = data.username; // Se obtiene el usuario
+        window.username = username;
         socket.emit('set username', username);
 
-        // Manejar el envío de mensajes
+        // Manejo del envío de mensajes
         document.getElementById('form').addEventListener('submit', function (e) {
             e.preventDefault();
-            const input = document.getElementById('input');
-            const message = input.value;
-            if (message) {
-                socket.emit('chat message', { text: message });
-                input.value = '';
-            }
+            const message = {
+                text: document.getElementById('input').value,
+                userSend: window.username,
+                userRecept: document.getElementById('recept').value // Asegúrate de tener un campo para el receptor
+            };
+            socket.emit('chat message', message);
+            document.getElementById('input').value = '';
         });
 
-        // Manejar la recepción de mensajes
-        socket.on('chat message', function (msg) {
-            const item = document.createElement('li');
-            item.classList.add('message');
-            item.classList.add(msg.user === username ? 'sent' : 'received');
-            item.innerHTML = `<strong>${msg.user}:</strong> ${msg.text}`;
-            document.getElementById('messages').appendChild(item);
+        // Manejo de la recepción de mensajes
+        socket.on('chat message', (msg) => {
+            const messageElement = document.createElement('li');
+            messageElement.className = `message ${msg.userSend === window.username ? 'sent' : 'received'}`;
+            messageElement.innerHTML = `<strong>${msg.userSend}:</strong> ${msg.text}`;
+            document.getElementById('messages').appendChild(messageElement);
         });
     })
     .catch(error => {
         console.error('Error fetching user:', error);
-        // Redirigir al usuario a la página de inicio de sesión si no está autenticado
         window.location.href = '/login';
     });
