@@ -10,6 +10,8 @@ const io = socketIo(server);
 const sequelize = require('./config/database');
 const Message = require('./public/models/Message'); // Ajusta la ruta
 const User = require('./public/models/user'); // Ajusta la ruta
+const bcrypt = require('bcrypt');
+const { Op } = require('sequelize');
 
 
 // BBDD
@@ -56,23 +58,48 @@ app.get('/logout', (req, res) => {
     });
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    // TODO validar usuario
-    req.session.user = { username };
-    res.redirect('/chat');
+
+    try {
+        const user = await User.findOne({ where: { username } });
+        if (user && await bcrypt.compare(password, user.password)) {
+            req.session.user = { username };
+            res.redirect('/chat');
+        } else {
+            // Aquí podrías agregar un mensaje de error para el usuario
+            res.redirect('/login');
+        }
+    } catch (error) {
+        console.error('Error iniciando sesión:', error);
+        res.redirect('/login');
+    }
 });
 
 app.get('/register', (req, res) => {
-    res.render('register');
+    // Si el usuario está autenticado, redirigir a /chat
+    if (req.session.user) {
+        res.redirect('/chat');
+    } else {
+        res.render('register', {
+            username: req.session.user ? req.session.user.username : null
+        });
+    }
 });
 
-app.post('/register', (req, res) => {
-    const { username, password, confirmPassword } = req.body;
-    // TODO validar registro y almacenar (creo que lo ultimo lo hace pero revisar)
-    if (password === confirmPassword) {
-        req.session.user = { username };
-        res.redirect('/chat');
+app.post('/register', async (req, res) => {
+    const { username, password, repeatPassword } = req.body;
+    if (password === repeatPassword) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        try {
+            const user = await User.create({ username, password: hashedPassword });
+            console.log('Usuario creado:', user); // Añade un log para verificar
+            req.session.user = { username };
+            res.redirect('/chat');
+        } catch (error) {
+            console.error('Error registrando usuario:', error);
+            res.redirect('/register');
+        }
     } else {
         res.redirect('/register');
     }
@@ -80,11 +107,19 @@ app.post('/register', (req, res) => {
 
 app.get('/chat', (req, res) => {
     if (req.session.user) {
-        // Recuperar mensajes de la base de datos
-        Message.findAll({ order: [['timestamp', 'ASC']] })
+        // Recuperar mensajes de la base de datos para el usuario actual
+        Message.findAll({
+            where: {
+                [Op.or]: [
+                    { userSend: req.session.user.username },
+                    { userRecept: req.session.user.username }
+                ]
+            },
+            order: [['timestamp', 'ASC']]
+        })
             .then(messages => {
                 // Recuperar usuarios de la base de datos
-                User.findAll() // Asegúrate de que `User` es el modelo correcto
+                User.findAll()
                     .then(users => {
                         const filteredUsers = users.filter(user => user.username !== req.session.user.username);
                         res.render('chat', {
@@ -139,7 +174,8 @@ io.on('connection', (socket) => {
         // Guarda el mensaje en la base de datos
         Message.create(message)
             .then(() => {
-                io.emit('chat message', message);
+                io.to(userSocketIds[msg.userRecept]).emit('chat message', message); // Enviar solo al destinatario
+                io.to(userSocketIds[msg.userSend]).emit('chat message', message); // Enviar al remitente también
             })
             .catch(err => console.error('Error saving message:', err));
     });

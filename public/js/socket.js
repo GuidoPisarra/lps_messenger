@@ -20,11 +20,10 @@ fetch('/user')
         });
 
         // Manejo de la recepción de mensajes
-        socket.on('chat message', (msg) => {
-            const messageElement = document.createElement('li');
-            messageElement.className = `message ${msg.userSend === window.username ? 'sent' : 'received'}`;
-            messageElement.innerHTML = `<strong>${msg.userSend}:</strong> ${msg.text}`;
-            document.getElementById('messages').appendChild(messageElement);
+        socket.on('chat message', (message) => {
+            if (message.userSend === window.username || message.userRecept === window.username) {
+                displayMessage(message); // Función para mostrar el mensaje en la interfaz
+            }
         });
     })
     .catch(error => {
@@ -32,3 +31,18 @@ fetch('/user')
         window.location.href = '/login';
     });
 
+// Definir la función displayMessage
+function displayMessage(message) {
+    const messageContainer = document.getElementById('messages');
+    const messageElement = document.createElement('li');
+
+    // Determina si el mensaje es enviado o recibido
+    const messageType = message.userSend === window.username ? 'sent' : 'received';
+    messageElement.className = `message ${messageType}`;
+    messageElement.innerHTML = `
+        <strong>${message.userSend}</strong>: ${message.text}
+    `;
+
+    messageContainer.appendChild(messageElement);
+    messageContainer.scrollTop = messageContainer.scrollHeight;
+}
