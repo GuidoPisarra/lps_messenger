@@ -35,30 +35,22 @@
             </ul>
         </div>
         <div class="pantalla-chat">
-            <h1>Chat <span id="usuario-chat"></span></h1>
-            <ul id="messages">
-                <% messages.forEach(message=> { %>
-                    <li class="message <%= message.userSend === username ? 'sent' : 'received' %>">
-                        <strong>
-                            <%= message.userSend %>:
-                        </strong>
-                        <%= message.text %>
-                    </li>
-                    <% }) %>
-            </ul>
-            <form id="form" action="">
+            <h1>Chat con <span id="usuario-chat"></span></h1>
+            <ul id="messages"></ul> <!-- Dejar el ul vacío inicialmente -->
+            <form id="form" action="" style="display: none;">
                 <input type="hidden" id="username" value="<%= username %>">
-                <input type="hidden" type="text" id="recept" placeholder="Recipient username">
+                <input type="hidden" id="recept" placeholder="Recipient username">
                 <input id="input" autocomplete="off" />
                 <button id="send">Send</button>
-            </form>
         </div>
     </main>
+    <script src="../js/main.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/socket.js"></script>
-    <script src="../js/main.js"></script>
     <script>
         window.username = "<%= username %>";
+
+
     </script>
 </body>
 

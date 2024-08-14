@@ -10,6 +10,8 @@ fetch('/user')
         // Manejo del envío de mensajes
         document.getElementById('form').addEventListener('submit', function (e) {
             e.preventDefault();
+            console.log('object');
+            console.log(document.getElementById('input').value);
             const message = {
                 text: document.getElementById('input').value,
                 userSend: window.username,

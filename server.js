@@ -107,38 +107,49 @@ app.post('/register', async (req, res) => {
 
 app.get('/chat', (req, res) => {
     if (req.session.user) {
-        // Recuperar mensajes de la base de datos para el usuario actual
-        Message.findAll({
-            where: {
-                [Op.or]: [
-                    { userSend: req.session.user.username },
-                    { userRecept: req.session.user.username }
-                ]
-            },
-            order: [['timestamp', 'ASC']]
-        })
-            .then(messages => {
-                // Recuperar usuarios de la base de datos
-                User.findAll()
-                    .then(users => {
-                        const filteredUsers = users.filter(user => user.username !== req.session.user.username);
-                        res.render('chat', {
-                            username: req.session.user.username,
-                            messages,
-                            users: filteredUsers
-                        });
-                    })
-                    .catch(err => {
-                        console.error('Error fetching users:', err);
-                        res.status(500).send('Error fetching users');
-                    });
+        // Recuperar usuarios de la base de datos
+        User.findAll()
+            .then(users => {
+                const filteredUsers = users.filter(user => user.username !== req.session.user.username);
+                res.render('chat', {
+                    username: req.session.user.username,
+                    messages: [], // No pasamos ningún mensaje al inicio
+                    users: filteredUsers
+                });
             })
             .catch(err => {
-                console.error('Error fetching messages:', err);
-                res.redirect('/');
+                console.error('Error fetching users:', err);
+                res.status(500).send('Error fetching users');
             });
     } else {
         res.redirect('/');
+    }
+});
+
+app.get('/chat/messages', async (req, res) => {
+    const username = req.query.username;  // Usuario logueado
+    const recipient = req.query.recipient; // Usuario seleccionado
+
+    try {
+        const messages = await Message.findAll({
+            where: {
+                [Op.or]: [
+                    {
+                        userSend: username,
+                        userRecept: recipient
+                    },
+                    {
+                        userSend: recipient,
+                        userRecept: username
+                    }
+                ]
+            },
+            order: [['timestamp', 'ASC']]
+        });
+        res.json({ messages });
+    } catch (error) {
+        console.error('Error fetching messages:', error);
+        res.status(500).json({ error: 'Error fetching messages' });
     }
 });
 
