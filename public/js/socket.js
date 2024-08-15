@@ -12,8 +12,9 @@ fetch('/user')
             e.preventDefault();
 
             const fileInput = document.getElementById('fileInput');
+            const messageInput = document.getElementById('input-message');
             const message = {
-                text: document.getElementById('input').value,
+                text: messageInput.value,
                 userSend: window.username,
                 userRecept: document.getElementById('recept').value
             };
@@ -37,7 +38,7 @@ fetch('/user')
                 socket.emit('chat message', message);
             }
 
-            document.getElementById('input').value = '';
+            messageInput.value = '';
             fileInput.value = ''; // Limpia el campo de archivo
         });
 
