@@ -30,3 +30,5 @@ Thumbs.db
 views/.cache/
 
 database.sqlite
+
+uploads/

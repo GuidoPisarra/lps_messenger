@@ -65,7 +65,7 @@ function displayMessage(message) {
 
     if (message.fileName && message.filePath) {
         const fileUrl = `/uploads/${message.fileName}`;
-        fileLink = `<br/><a href="${fileUrl}" download="${message.fileName}">Descargar archivo adjunto</a>`;
+        fileLink = `<br/><a href="${fileUrl}" download="${message.fileName}">${message.fileName}</a>`;
     }
 
     messageElement.innerHTML = `
