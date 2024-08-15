@@ -12,6 +12,7 @@ const Message = require('./public/models/Message'); // Ajusta la ruta
 const User = require('./public/models/user'); // Ajusta la ruta
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
+const fs = require('fs');
 
 
 // BBDD
@@ -29,6 +30,7 @@ app.use(session({
     resave: false,
     saveUninitialized: true,
 }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Configuracion del motor de plantillas EJS
 app.set('view engine', 'ejs');
@@ -175,20 +177,37 @@ io.on('connection', (socket) => {
     });
 
     // Manejo del mensaje
-    socket.on('chat message', (msg) => {
+    socket.on('chat message', async (msg) => {
         const message = {
             text: msg.text,
             userSend: msg.userSend,
-            userRecept: msg.userRecept
+            userRecept: msg.userRecept,
+            fileName: msg.fileName || null,
+            fileType: msg.fileType || null,
+            filePath: msg.filePath || null
         };
 
+        if (msg.fileData) {
+            // Decodifica el archivo desde base64 y guárdalo en el servidor
+            const base64Data = msg.fileData.replace(/^data:[a-z\/]+;base64,/, '');
+            const filePath = path.join(__dirname, 'uploads', message.fileName);
+
+            try {
+                await fs.promises.writeFile(filePath, base64Data, 'base64');
+                message.filePath = filePath;
+            } catch (err) {
+                console.error('Error saving file:', err);
+            }
+        }
+
         // Guarda el mensaje en la base de datos
-        Message.create(message)
-            .then(() => {
-                io.to(userSocketIds[msg.userRecept]).emit('chat message', message); // Enviar solo al destinatario
-                io.to(userSocketIds[msg.userSend]).emit('chat message', message); // Enviar al remitente también
-            })
-            .catch(err => console.error('Error saving message:', err));
+        try {
+            await Message.create(message);
+            io.to(userSocketIds[msg.userRecept]).emit('chat message', message);
+            io.to(userSocketIds[msg.userSend]).emit('chat message', message);
+        } catch (err) {
+            console.error('Error saving message:', err);
+        }
     });
 
     // Manejo de desconexión

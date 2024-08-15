@@ -37,11 +37,13 @@
         <div class="pantalla-chat">
             <h1>Chat con <span id="usuario-chat"></span></h1>
             <ul id="messages"></ul> <!-- Dejar el ul vacío inicialmente -->
-            <form id="form" action="" style="display: none;">
+            <form id="form" action="" style="display: none;" enctype="multipart/form-data">
                 <input type="hidden" id="username" value="<%= username %>">
-                <input type="hidden" id="recept" placeholder="Recipient username">
-                <input id="input" autocomplete="off" />
+                <input type="hidden" id="recept">
+                <input id="input" autocomplete="off" placeholder="Escribe un mensaje..." />
+                <input type="file" id="fileInput" name="file"> <!-- Campo para seleccionar un archivo -->
                 <button id="send">Send</button>
+            </form>
         </div>
     </main>
     <script src="../js/main.js"></script>
@@ -49,8 +51,6 @@
     <script src="/js/socket.js"></script>
     <script>
         window.username = "<%= username %>";
-
-
     </script>
 </body>
 

@@ -45,3 +45,8 @@ En el directorio principal
 # BBDD Local de prueba
 
 > npm install sqlite3 sequelize
+
+
+# Para manejo de archivos en los mensajes
+
+> npm install multer

@@ -10,15 +10,35 @@ fetch('/user')
         // Manejo del envío de mensajes
         document.getElementById('form').addEventListener('submit', function (e) {
             e.preventDefault();
-            console.log('object');
-            console.log(document.getElementById('input').value);
+
+            const fileInput = document.getElementById('fileInput');
             const message = {
                 text: document.getElementById('input').value,
                 userSend: window.username,
-                userRecept: document.getElementById('recept').value // Asegúrate de tener un campo para el receptor
+                userRecept: document.getElementById('recept').value
             };
-            socket.emit('chat message', message);
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (event) {
+                    message.fileName = file.name;
+                    message.fileType = file.type;
+                    message.fileData = event.target.result; // Contenido del archivo en base64
+                    message.filePath = '/uploads/' + file.name
+                    // Enviar el mensaje con el archivo adjunto
+                    socket.emit('chat message', message);
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                // Enviar el mensaje sin archivo adjunto
+                socket.emit('chat message', message);
+            }
+
             document.getElementById('input').value = '';
+            fileInput.value = ''; // Limpia el campo de archivo
         });
 
         // Manejo de la recepción de mensajes
@@ -37,12 +57,18 @@ fetch('/user')
 function displayMessage(message) {
     const messageContainer = document.getElementById('messages');
     const messageElement = document.createElement('li');
-
-    // Determina si el mensaje es enviado o recibido
     const messageType = message.userSend === window.username ? 'sent' : 'received';
+
     messageElement.className = `message ${messageType}`;
+    let fileLink = '';
+
+    if (message.fileName && message.filePath) {
+        const fileUrl = `/uploads/${message.fileName}`;
+        fileLink = `<br/><a href="${fileUrl}" download="${message.fileName}">Descargar archivo adjunto</a>`;
+    }
+
     messageElement.innerHTML = `
-        <strong>${message.userSend}</strong>: ${message.text}
+        <strong>${message.userSend}</strong>: ${message.text} ${fileLink}
     `;
 
     messageContainer.appendChild(messageElement);
