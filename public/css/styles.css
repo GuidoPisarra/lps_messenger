@@ -60,6 +60,32 @@ button:hover {
     background-color: #45a049;
 }
 
+#input-message {
+    min-width: 75%;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+/* Estilos para el label que actuará como botón */
+.custom-file-upload {
+    display: inline-block;
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+    border: none;
+}
+
+/* Estilo al pasar el mouse */
+.custom-file-upload:hover {
+    background-color: #0056b3;
+}
+
 #messages {
     list-style-type: none;
     padding: 0;
