@@ -23,7 +23,7 @@
     </header>
     <main>
         <div class="lista-usuarios">
-            <h2>Users</h2>
+            <h2>Usuarios</h2>
             <ul id="user-list">
                 <% users.forEach(user=> { %>
                     <li>
@@ -35,16 +35,24 @@
             </ul>
         </div>
         <div class="pantalla-chat">
-            <h1 class="titulo-chat">Chat con <span id="usuario-chat" class="titulo-chat"></span></h1>
-            <ul id="messages"></ul> <!-- Dejar el ul vacío inicialmente -->
+            <h1 class="titulo-chat"><span id="usuario-chat" class="titulo-chat"></span></h1>
+            <ul id="messages"></ul>
+            <div class="contenedor-archivos" id="contenedor-archivos" style="display: none;">
+
+            </div>
             <form id="form" action="" style="display: none;" enctype="multipart/form-data">
                 <input type="hidden" id="username" value="<%= username %>">
                 <input type="hidden" id="recept">
                 <input id="input-message" autocomplete="off" placeholder="Escribe un mensaje..." />
-                <label for="fileInput" class="custom-file-upload"> + </label>
-                <input type="file" id="fileInput" name="file"> <button id="send">Send</button>
+                <label for="fileInput" class="custom-file-upload" id="btnAgregarArchivo">
+                    <img src="/assets/icons/add.svg" alt="Add File" class="icon">
+                </label> <input type="file" id="fileInput" name="file">
+                <button id="send">
+                    <img src="/assets/icons/send.svg" alt="Send" class="icon">
+                </button>
             </form>
         </div>
+
     </main>
     <script src="../js/main.js"></script>
     <script src="/socket.io/socket.io.js"></script>

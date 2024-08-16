@@ -12,6 +12,8 @@ fetch('/user')
             e.preventDefault();
 
             const fileInput = document.getElementById('fileInput');
+            const contenedorArchivos = document.getElementById('contenedor-archivos');
+
             const messageInput = document.getElementById('input-message');
             const message = {
                 text: messageInput.value,
@@ -39,6 +41,8 @@ fetch('/user')
             }
 
             messageInput.value = '';
+            contenedorArchivos.innerHTML = '';
+            contenedorArchivos.style.display = 'none';
             fileInput.value = ''; // Limpia el campo de archivo
         });
 

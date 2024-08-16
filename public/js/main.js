@@ -1,3 +1,8 @@
+const contenedorArchivos = document.getElementById('contenedor-archivos');
+const btnAgregarArchivo = document.getElementById('btnAgregarArchivo');
+const fileInput = document.getElementById('fileInput');
+
+
 function startChat(recipient) {
     const username = window.username;
 
@@ -26,3 +31,32 @@ function startChat(recipient) {
             console.error('Error fetching messages:', error);
         });
 }
+
+
+fileInput.addEventListener('change', (event) => {
+    const archivos = event.target.files; // Obtén los archivos seleccionados
+
+    // Limpiar el contenedor antes de agregar nuevas miniaturas
+    contenedorArchivos.innerHTML = '';
+    contenedorArchivos.style.display = 'block';
+    Array.from(archivos).forEach(archivo => {
+        const miniatura = document.createElement('div');
+        miniatura.classList.add('miniatura');
+
+        // Verifica si el archivo es una imagen
+        if (archivo.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(archivo); // Crea una URL temporal para la imagen
+            img.onload = () => URL.revokeObjectURL(img.src); // Libera la memoria cuando ya no es necesario
+            img.classList.add('miniatura-imagen');
+            miniatura.appendChild(img);
+        } else {
+            // Si no es una imagen, muestra un ícono genérico o el nombre del archivo
+            miniatura.textContent = archivo.name;
+            miniatura.classList.add('miniatura-archivo');
+        }
+
+        // Agrega la miniatura al contenedor
+        contenedorArchivos.appendChild(miniatura);
+    });
+});
