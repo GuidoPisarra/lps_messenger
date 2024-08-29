@@ -26,9 +26,20 @@
             <h2>Usuarios</h2>
             <ul id="user-list">
                 <% users.forEach(user=> { %>
-                    <li>
+                    <li class="user-item">
                         <a href="#" onclick="startChat('<%= user.username %>')">
-                            <%= user.username %>
+                            <div class="user-avatar">
+                                <img src="/assets/icons/user-offline.svg" alt="<%= user.username %>" class="avatar">
+                            </div>
+                            <div class="user-info">
+                                <span class="username">
+                                    <%= user.username %>
+                                </span>
+                                <span
+                                    class="online-status <% if (user.isOnline) { %> online<% } else { %> offline<% } %>">
+                                    <% if (user.isOnline) { %>En línea<% } else { %>Desconectado<% } %>
+                                </span>
+                            </div>
                         </a>
                     </li>
                     <% }) %>
@@ -40,7 +51,7 @@
             <div class="contenedor-archivos" id="contenedor-archivos" style="display: none;">
 
             </div>
-            <form id="form" action="" style="display: none;" enctype="multipart/form-data">
+            <form id="form" action="" class="form-chat" style="display: none;" enctype="multipart/form-data">
                 <input type="hidden" id="username" value="<%= username %>">
                 <input type="hidden" id="recept">
                 <input id="input-message" autocomplete="off" placeholder="Escribe un mensaje..." />

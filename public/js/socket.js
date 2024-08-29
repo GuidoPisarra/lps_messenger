@@ -3,54 +3,46 @@ const socket = io();
 fetch('/user')
     .then(response => response.json())
     .then(data => {
-        const username = data.username; // Se obtiene el usuario
+        const username = data.username;
         window.username = username;
         socket.emit('set username', username);
 
-        // Manejo del envío de mensajes
-        document.getElementById('form').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const fileInput = document.getElementById('fileInput');
-            const contenedorArchivos = document.getElementById('contenedor-archivos');
-
-            const messageInput = document.getElementById('input-message');
-            const message = {
-                text: messageInput.value,
-                userSend: window.username,
-                userRecept: document.getElementById('recept').value
-            };
-
-            if (fileInput.files.length > 0) {
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-
-                reader.onload = function (event) {
-                    message.fileName = file.name;
-                    message.fileType = file.type;
-                    message.fileData = event.target.result; // Contenido del archivo en base64
-                    message.filePath = '/uploads/' + file.name
-                    // Enviar el mensaje con el archivo adjunto
-                    socket.emit('chat message', message);
-                };
-
-                reader.readAsDataURL(file);
-            } else {
-                // Enviar el mensaje sin archivo adjunto
-                socket.emit('chat message', message);
-            }
-
-            messageInput.value = '';
-            contenedorArchivos.innerHTML = '';
-            contenedorArchivos.style.display = 'none';
-            fileInput.value = ''; // Limpia el campo de archivo
-        });
-
-        // Manejo de la recepción de mensajes
         socket.on('chat message', (message) => {
             if (message.userSend === window.username || message.userRecept === window.username) {
-                displayMessage(message); // Función para mostrar el mensaje en la interfaz
+                displayMessage(message);
             }
+        });
+
+        socket.on('ping', () => {
+            socket.emit('pong');
+        });
+
+        // Manejo de la actualización de usuarios
+        socket.on('update users', (users) => {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = ''; // Limpiar la lista de usuarios
+
+            // Filtrar para excluir al propio usuario
+            const filteredUsers = users.filter(user => user.username !== window.username);
+
+            filteredUsers.forEach(user => {
+                const userItem = document.createElement('li');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <a href="#" onclick="startChat('${user.username}')">
+                        <div class="user-avatar">
+                            <img src="/assets/icons/${user.isOnline ? 'user-online' : 'user-offline'}.svg" alt="${user.username}" class="avatar">
+                        </div>
+                        <div class="user-info">
+                            <span class="username">${user.username}</span>
+                            <span class="online-status ${user.isOnline ? 'online' : 'offline'}">
+                                ${user.isOnline ? 'Conectado' : 'Desconectado'}
+                            </span>
+                        </div>
+                    </a>
+                `;
+                userList.appendChild(userItem);
+            });
         });
     })
     .catch(error => {

@@ -168,12 +168,31 @@ let userSocketIds = {};
 
 // Manejo del socket
 io.on('connection', (socket) => {
-    console.log('Nuevo usuario conectado');
+
+    // Envía la lista de usuarios con sus estados al cliente
+    const users = Object.keys(userSocketIds).map(username => ({
+        username,
+        isOnline: !!userSocketIds[username]
+    }));
+
+    socket.emit('update users', users);
+
+    setInterval(() => {
+        socket.emit('ping');
+    }, 10000);
+
+    socket.on('pong', () => {
+    });
+
 
     // Asignar nombre de usuario al socket
     socket.on('set username', (username) => {
         userSocketIds[username] = socket.id;
-        io.emit('update users', Object.keys(userSocketIds));
+        const updatedUsers = Object.keys(userSocketIds).map(user => ({
+            username: user,
+            isOnline: !!userSocketIds[user]
+        }));
+        io.emit('update users', updatedUsers);
     });
 
     // Manejo del mensaje
@@ -188,7 +207,6 @@ io.on('connection', (socket) => {
         };
 
         if (msg.fileData) {
-            // Decodifica el archivo desde base64 y guárdalo en el servidor
             const base64Data = msg.fileData.replace(/^data:[a-z\/]+;base64,/, '');
             const filePath = path.join(__dirname, 'uploads', message.fileName);
 
@@ -200,11 +218,10 @@ io.on('connection', (socket) => {
             }
         }
 
-        // Guarda el mensaje en la base de datos
         try {
             await Message.create(message);
-            io.to(userSocketIds[msg.userRecept]).emit('chat message', message);
-            io.to(userSocketIds[msg.userSend]).emit('chat message', message);
+            io.to(userSocketIds[msg.userRecept].socketId).emit('chat message', message);
+            io.to(userSocketIds[msg.userSend].socketId).emit('chat message', message);
         } catch (err) {
             console.error('Error saving message:', err);
         }
@@ -213,13 +230,24 @@ io.on('connection', (socket) => {
     // Manejo de desconexión
     socket.on('disconnect', () => {
         const username = Object.keys(userSocketIds).find(key => userSocketIds[key] === socket.id);
-        if (username) {
+        if (username && req.session.user) {
             delete userSocketIds[username];
-            io.emit('update users', Object.keys(userSocketIds));
+            const updatedUsers = Object.keys(userSocketIds).map(user => ({
+                username: user,
+                isOnline: !!userSocketIds[user]
+            }));
+            io.emit('update users', updatedUsers);
         }
-        console.log('Usuario desconectado');
     });
 });
+
+// Función para obtener los usuarios en línea
+function getOnlineUsers() {
+    return Object.keys(userSocketIds).map(username => ({
+        username: username,
+        isOnline: userSocketIds[username].isOnline
+    }));
+}
 
 
 const PORT = process.env.PORT || 3000;

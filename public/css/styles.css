@@ -142,16 +142,83 @@ main {
 }
 
 .lista-usuarios {
-    width: 15%;
+    width: 25%;
     background-color: #313131;
-    color: #ddd;
     border-right: 1px solid #ccc;
+    color: #ddd;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
     padding: 10px;
     box-sizing: border-box;
 
     a {
         color: #ddd;
+        display: flex;
+        text-decoration: none;
     }
+}
+
+.lista-usuarios h2 {
+    margin: 0;
+    padding: 10px;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#user-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    transition: background-color 0.3s;
+}
+
+.user-item:hover {
+    background-color: #f9f9f9;
+}
+
+.user-avatar {
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.user-info {
+    flex-grow: 1;
+}
+
+.username {
+    display: block;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.online-status {
+    font-size: 12px;
+    color: #666;
+}
+
+.online-status.online {
+    color: #28a745;
+    /* Verde para usuarios en línea */
+}
+
+.online-status.offline {
+    color: #dc3545;
+    /* Rojo para usuarios desconectados */
 }
 
 .pantalla-chat {
@@ -233,4 +300,8 @@ ul::-webkit-scrollbar-thumb {
 ul::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 10px;
+}
+
+.form-chat {
+    margin-top: 20px;
 }
