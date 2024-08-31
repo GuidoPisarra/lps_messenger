@@ -60,3 +60,23 @@ fileInput.addEventListener('change', (event) => {
         contenedorArchivos.appendChild(miniatura);
     });
 });
+
+const formChat = document.getElementById('form');
+formChat.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const input = document.getElementById('input-message');
+    const message = input.value;
+    const recipient = document.getElementById('recept').value;
+
+    if (message.trim() !== '') {
+        const mensaje = {
+            userSend: window.username,
+            userRecept: recipient,
+            text: message,
+        };
+        socket.emit('chat message', mensaje);
+        displayMessage(mensaje);
+
+        input.value = '';
+    }
+});

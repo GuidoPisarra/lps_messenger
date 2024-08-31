@@ -20,8 +20,7 @@ fetch('/user')
         // Manejo de la actualización de usuarios
         socket.on('update users', (users) => {
             const userList = document.getElementById('user-list');
-            userList.innerHTML = ''; // Limpiar la lista de usuarios
-
+            userList.innerHTML = '';
             // Filtrar para excluir al propio usuario
             const filteredUsers = users.filter(user => user.username !== window.username);
 

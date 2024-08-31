@@ -166,37 +166,45 @@ app.get('/user', (req, res) => {
 let users = {};
 let userSocketIds = {};
 
+
+(async () => {
+    try {
+        const allUsers = await User.findAll();
+        allUsers.forEach(user => {
+            users[user.username] = false; // Inicialmente, todos están desconectados
+        });
+    } catch (error) {
+        console.error('Error fetching users:', error);
+    }
+})();
+
 // Manejo del socket
 io.on('connection', (socket) => {
-
-    // Envía la lista de usuarios con sus estados al cliente
-    const users = Object.keys(userSocketIds).map(username => ({
+    // Enviar la lista actual de usuarios cuando un nuevo cliente se conecta
+    socket.emit('update users', Object.keys(users).map(username => ({
         username,
-        isOnline: !!userSocketIds[username]
-    }));
-
-    socket.emit('update users', users);
+        isOnline: users[username]
+    })));
 
     setInterval(() => {
         socket.emit('ping');
     }, 10000);
 
-    socket.on('pong', () => {
-    });
+    socket.on('pong', () => { });
 
-
-    // Asignar nombre de usuario al socket
     socket.on('set username', (username) => {
-        userSocketIds[username] = socket.id;
-        const updatedUsers = Object.keys(userSocketIds).map(user => ({
+        users[username] = true; // Marcar al usuario como conectado
+        userSocketIds[username] = socket.id; // Registrar el socket ID
+        const updatedUsers = Object.keys(users).map(user => ({
             username: user,
-            isOnline: !!userSocketIds[user]
+            isOnline: users[user]
         }));
-        io.emit('update users', updatedUsers);
+        io.emit('update users', updatedUsers); // Enviar la lista actualizada
     });
 
     // Manejo del mensaje
     socket.on('chat message', async (msg) => {
+        console.log(msg);
         const message = {
             text: msg.text,
             userSend: msg.userSend,
@@ -220,6 +228,7 @@ io.on('connection', (socket) => {
 
         try {
             await Message.create(message);
+            console.log(message);
             io.to(userSocketIds[msg.userRecept].socketId).emit('chat message', message);
             io.to(userSocketIds[msg.userSend].socketId).emit('chat message', message);
         } catch (err) {
@@ -230,13 +239,14 @@ io.on('connection', (socket) => {
     // Manejo de desconexión
     socket.on('disconnect', () => {
         const username = Object.keys(userSocketIds).find(key => userSocketIds[key] === socket.id);
-        if (username && req.session.user) {
-            delete userSocketIds[username];
-            const updatedUsers = Object.keys(userSocketIds).map(user => ({
+        if (username) {
+            users[username] = false; // Marcar al usuario como desconectado
+            delete userSocketIds[username]; // Eliminar el socket ID
+            const updatedUsers = Object.keys(users).map(user => ({
                 username: user,
-                isOnline: !!userSocketIds[user]
+                isOnline: users[user]
             }));
-            io.emit('update users', updatedUsers);
+            io.emit('update users', updatedUsers); // Enviar la lista actualizada
         }
     });
 });
