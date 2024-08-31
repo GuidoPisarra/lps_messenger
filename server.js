@@ -204,7 +204,6 @@ io.on('connection', (socket) => {
 
     // Manejo del mensaje
     socket.on('chat message', async (msg) => {
-        console.log(msg);
         const message = {
             text: msg.text,
             userSend: msg.userSend,
@@ -228,13 +227,20 @@ io.on('connection', (socket) => {
 
         try {
             await Message.create(message);
-            console.log(message);
-            io.to(userSocketIds[msg.userRecept].socketId).emit('chat message', message);
-            io.to(userSocketIds[msg.userSend].socketId).emit('chat message', message);
+
+            const receiverSocketId = userSocketIds[msg.userRecept];
+            // Emitir el mensaje solo al receptor
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('chat message', message);
+            }
+            // Enviar al emisor para actualizar su propio chat sin duplicar
+            socket.emit('chat message', message);
+
         } catch (err) {
             console.error('Error saving message:', err);
         }
     });
+
 
     // Manejo de desconexión
     socket.on('disconnect', () => {

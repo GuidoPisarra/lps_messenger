@@ -75,7 +75,7 @@ formChat.addEventListener('submit', (event) => {
             text: message,
         };
         socket.emit('chat message', mensaje);
-        displayMessage(mensaje);
+        //displayMessage(mensaje);
 
         input.value = '';
     }
