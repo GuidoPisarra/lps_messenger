@@ -67,16 +67,43 @@ formChat.addEventListener('submit', (event) => {
     const input = document.getElementById('input-message');
     const message = input.value;
     const recipient = document.getElementById('recept').value;
+    const archivos = fileInput.files; // Obtener los archivos seleccionados
 
-    if (message.trim() !== '') {
+    if (message.trim() !== '' || archivos.length > 0) {
         const mensaje = {
             userSend: window.username,
             userRecept: recipient,
             text: message,
+            files: [] // Array para guardar los archivos
         };
-        socket.emit('chat message', mensaje);
-        //displayMessage(mensaje);
 
-        input.value = '';
+        // Convertir archivos a base64 y agregarlos al mensaje
+        Array.from(archivos).forEach(archivo => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const base64 = event.target.result;
+                mensaje.files.push({
+                    fileName: archivo.name,
+                    fileType: archivo.type,
+                    fileData: base64
+                });
+
+                // Emitir el mensaje cuando todos los archivos estén listos
+                if (mensaje.files.length === archivos.length) {
+                    socket.emit('chat message', mensaje);
+                    input.value = '';
+                    fileInput.value = ''; // Limpiar el input de archivos
+                    contenedorArchivos.innerHTML = ''; // Limpiar el contenedor de miniaturas
+                    contenedorArchivos.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(archivo); // Leer archivo como base64
+        });
+
+        // Si no hay archivos, emitir inmediatamente
+        if (archivos.length === 0) {
+            socket.emit('chat message', mensaje);
+            input.value = '';
+        }
     }
 });

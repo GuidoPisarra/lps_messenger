@@ -208,20 +208,33 @@ io.on('connection', (socket) => {
             text: msg.text,
             userSend: msg.userSend,
             userRecept: msg.userRecept,
-            fileName: msg.fileName || null,
-            fileType: msg.fileType || null,
-            filePath: msg.filePath || null
+            files: [] // Array para guardar información de los archivos
         };
 
-        if (msg.fileData) {
-            const base64Data = msg.fileData.replace(/^data:[a-z\/]+;base64,/, '');
-            const filePath = path.join(__dirname, 'uploads', message.fileName);
+        if (msg.files && msg.files.length > 0) {
+            const uploadsDir = path.join(__dirname, 'uploads');
 
-            try {
-                await fs.promises.writeFile(filePath, base64Data, 'base64');
-                message.filePath = filePath;
-            } catch (err) {
-                console.error('Error saving file:', err);
+            // Verificar que el directorio de uploads exista, si no, crearlo
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+
+            for (let file of msg.files) {
+                const base64Data = file.fileData.replace(/^data:[a-z\/]+;base64,/, '');
+                const filePath = path.join(uploadsDir, file.fileName);
+
+                try {
+                    // Guardar el archivo en el sistema de archivos
+                    await fs.promises.writeFile(filePath, base64Data, 'base64');
+                    message.files.push({
+                        fileName: file.fileName,
+                        fileType: file.fileType,
+                        filePath: `/uploads/${file.fileName}`
+                    });
+                } catch (err) {
+                    console.error('Error saving file:', err);
+                    return; // Detener el flujo si ocurre un error al guardar el archivo
+                }
             }
         }
 
