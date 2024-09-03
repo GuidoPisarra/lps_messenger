@@ -204,56 +204,61 @@ io.on('connection', (socket) => {
 
     // Manejo del mensaje
     socket.on('chat message', async (msg) => {
-        const message = {
+        const messageData = {
             text: msg.text,
             userSend: msg.userSend,
             userRecept: msg.userRecept,
-            files: [] // Array para guardar información de los archivos
+            fileName: null,  // Inicialmente null, se llenará si hay archivos
+            fileType: null,
+            filePath: null,
         };
 
-        if (msg.files && msg.files.length > 0) {
+        // Verificar si hay archivos adjuntos
+        if (Array.isArray(msg.files) && msg.files.length > 0) {
             const uploadsDir = path.join(__dirname, 'uploads');
 
-            // Verificar que el directorio de uploads exista, si no, crearlo
             if (!fs.existsSync(uploadsDir)) {
                 fs.mkdirSync(uploadsDir, { recursive: true });
             }
 
-            for (let file of msg.files) {
+            // Tomar solo el primer archivo para almacenar, si hay más de uno
+            const file = msg.files[0];
+            if (file.fileName && file.fileData) {
                 const base64Data = file.fileData.replace(/^data:[a-z\/]+;base64,/, '');
                 const filePath = path.join(uploadsDir, file.fileName);
 
                 try {
                     // Guardar el archivo en el sistema de archivos
                     await fs.promises.writeFile(filePath, base64Data, 'base64');
-                    message.files.push({
-                        fileName: file.fileName,
-                        fileType: file.fileType,
-                        filePath: `/uploads/${file.fileName}`
-                    });
+
+                    // Agregar la información del archivo al mensaje
+                    messageData.fileName = file.fileName;
+                    messageData.fileType = file.fileType || 'unknown';
+                    messageData.filePath = `/uploads/${file.fileName}`;
                 } catch (err) {
                     console.error('Error saving file:', err);
-                    return; // Detener el flujo si ocurre un error al guardar el archivo
+                    return;
                 }
+            } else {
+                console.error('Invalid file object:', file);
+                return;
             }
         }
 
         try {
-            await Message.create(message);
+            // Crear y guardar el mensaje en la base de datos
+            await Message.create(messageData);
 
             const receiverSocketId = userSocketIds[msg.userRecept];
-            // Emitir el mensaje solo al receptor
             if (receiverSocketId) {
-                io.to(receiverSocketId).emit('chat message', message);
+                io.to(receiverSocketId).emit('chat message', messageData);
             }
-            // Enviar al emisor para actualizar su propio chat sin duplicar
-            socket.emit('chat message', message);
+            socket.emit('chat message', messageData);
 
         } catch (err) {
             console.error('Error saving message:', err);
         }
     });
-
 
     // Manejo de desconexión
     socket.on('disconnect', () => {
