@@ -11,20 +11,19 @@ const io = socketIo(server);
 const sequelize = require('./config/database');
 const userController = require('./controllers/userController');
 const chatController = require('./controllers/chatController');
-const Message = require('./models/Message'); // Asegúrate de que tienes el modelo de Message
-const User = require('./models/User'); // Asegúrate de que tienes el modelo de User
+const Message = require('./models/Message');
+const User = require('./models/user');
 
 // Define la variable users para almacenar la información de los usuarios
-const users = {}; // Almacena la información de todos los usuarios
+const users = {};
 
 // Cargar todos los usuarios desde la base de datos al iniciar el servidor
 async function loadUsers() {
     try {
-        const allUsers = await User.findAll(); // Obtener todos los usuarios
+        const allUsers = await User.findAll();
         allUsers.forEach(user => {
             users[user.username] = { isOnline: false, socketId: null };
         });
-        console.log('Usuarios cargados:', users);
     } catch (err) {
         console.error('Error cargando usuarios:', err);
     }
@@ -34,7 +33,7 @@ async function loadUsers() {
 sequelize.authenticate()
     .then(() => {
         console.log('Conexión a la base de datos establecida correctamente.');
-        loadUsers(); // Cargar usuarios al iniciar
+        loadUsers();
     })
     .catch(err => console.error('Error conectando a la base de datos:', err));
 
@@ -99,10 +98,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// Socket.io y lógica de conexión
 io.on('connection', (socket) => {
-    console.log('Un usuario se ha conectado');
-
     // Enviar la lista actualizada de usuarios cuando un nuevo cliente se conecta
     socket.emit('update users', getOnlineUsers());
 
@@ -115,11 +111,11 @@ io.on('connection', (socket) => {
     socket.on('set username', (username) => {
         // Asegurarse de que el usuario existe en la lista
         if (!users[username]) {
-            users[username] = { isOnline: false, socketId: null }; // Agregar el usuario si no existe
+            users[username] = { isOnline: false, socketId: null };
         }
-        users[username].isOnline = true; // Marcar al usuario como conectado
-        users[username].socketId = socket.id; // Registrar el socket ID
-        io.emit('update users', getOnlineUsers()); // Enviar la lista actualizada
+        users[username].isOnline = true;
+        users[username].socketId = socket.id;
+        io.emit('update users', getOnlineUsers());
     });
 
     // Manejo del mensaje
@@ -128,7 +124,7 @@ io.on('connection', (socket) => {
             text: msg.text,
             userSend: msg.userSend,
             userRecept: msg.userRecept,
-            fileName: null,  // Inicialmente null, se llenará si hay archivos
+            fileName: null,
             fileType: null,
             filePath: null,
         };
@@ -141,17 +137,14 @@ io.on('connection', (socket) => {
                 fs.mkdirSync(uploadsDir, { recursive: true });
             }
 
-            // Tomar solo el primer archivo para almacenar, si hay más de uno
             const file = msg.files[0];
             if (file.fileName && file.fileData) {
                 const base64Data = file.fileData.replace(/^data:[a-z\/]+;base64,/, '');
                 const filePath = path.join(uploadsDir, file.fileName);
 
                 try {
-                    // Guardar el archivo en el sistema de archivos
                     await fs.promises.writeFile(filePath, base64Data, 'base64');
 
-                    // Agregar la información del archivo al mensaje
                     messageData.fileName = file.fileName;
                     messageData.fileType = file.fileType || 'unknown';
                     messageData.filePath = `/uploads/${file.fileName}`;
@@ -166,7 +159,6 @@ io.on('connection', (socket) => {
         }
 
         try {
-            // Crear y guardar el mensaje en la base de datos
             await Message.create(messageData);
 
             const receiverSocketId = users[msg.userRecept]?.socketId;
@@ -185,9 +177,9 @@ io.on('connection', (socket) => {
         console.log('Un usuario se ha desconectado');
         const username = Object.keys(users).find(key => users[key].socketId === socket.id);
         if (username) {
-            users[username].isOnline = false; // Marcar al usuario como desconectado
-            users[username].socketId = null; // Eliminar el socket ID
-            io.emit('update users', getOnlineUsers()); // Enviar la lista actualizada
+            users[username].isOnline = false;
+            users[username].socketId = null;
+            io.emit('update users', getOnlineUsers());
         }
     });
 });
@@ -196,7 +188,7 @@ io.on('connection', (socket) => {
 function getOnlineUsers() {
     return Object.keys(users).map(username => ({
         username: username,
-        isOnline: users[username].isOnline // Utilizar la propiedad `isOnline`
+        isOnline: users[username].isOnline
     }));
 }
 
