@@ -4,23 +4,39 @@ const socketIo = require('socket.io');
 const path = require('path');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const fs = require('fs');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 const sequelize = require('./config/database');
-const Message = require('./models/Message'); // Ajusta la ruta
-const User = require('./models/user'); // Ajusta la ruta
-const bcrypt = require('bcrypt');
-const { Op } = require('sequelize');
-const fs = require('fs');
+const userController = require('./controllers/userController');
+const chatController = require('./controllers/chatController');
+const Message = require('./models/Message'); // Asegúrate de que tienes el modelo de Message
+const User = require('./models/User'); // Asegúrate de que tienes el modelo de User
 
+// Define la variable users para almacenar la información de los usuarios
+const users = {}; // Almacena la información de todos los usuarios
+
+// Cargar todos los usuarios desde la base de datos al iniciar el servidor
+async function loadUsers() {
+    try {
+        const allUsers = await User.findAll(); // Obtener todos los usuarios
+        allUsers.forEach(user => {
+            users[user.username] = { isOnline: false, socketId: null };
+        });
+        console.log('Usuarios cargados:', users);
+    } catch (err) {
+        console.error('Error cargando usuarios:', err);
+    }
+}
 
 // BBDD
 sequelize.authenticate()
-    .then(() => console.log('Conexión a la base de datos establecida correctamente.'))
+    .then(() => {
+        console.log('Conexión a la base de datos establecida correctamente.');
+        loadUsers(); // Cargar usuarios al iniciar
+    })
     .catch(err => console.error('Error conectando a la base de datos:', err));
-
-
 
 // Middlewares
 app.use(express.static(path.join(__dirname, 'public')));
@@ -32,10 +48,9 @@ app.use(session({
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configuracion del motor de plantillas EJS
+// Configuración del motor de plantillas EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'public', 'templates'));
-
 
 // Rutas
 app.get('', (req, res) => {
@@ -50,6 +65,30 @@ app.get('/login', (req, res) => {
     res.render('login');
 });
 
+app.post('/login', userController.login);
+
+app.get('/register', (req, res) => {
+    if (req.session.user) {
+        res.redirect('/chat');
+    } else {
+        res.render('register');
+    }
+});
+
+app.post('/register', userController.register);
+
+app.get('/chat', userController.getChat);
+
+app.get('/chat/messages', chatController.getMessages);
+
+app.get('/user', (req, res) => {
+    if (req.session.user) {
+        res.json(req.session.user);
+    } else {
+        res.status(401).send('Unauthorized');
+    }
+});
+
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -60,131 +99,12 @@ app.get('/logout', (req, res) => {
     });
 });
 
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-        const user = await User.findOne({ where: { username } });
-        if (user && await bcrypt.compare(password, user.password)) {
-            req.session.user = { username };
-            res.redirect('/chat');
-        } else {
-            // Aquí podrías agregar un mensaje de error para el usuario
-            res.redirect('/login');
-        }
-    } catch (error) {
-        console.error('Error iniciando sesión:', error);
-        res.redirect('/login');
-    }
-});
-
-app.get('/register', (req, res) => {
-    // Si el usuario está autenticado, redirigir a /chat
-    if (req.session.user) {
-        res.redirect('/chat');
-    } else {
-        res.render('register', {
-            username: req.session.user ? req.session.user.username : null
-        });
-    }
-});
-
-app.post('/register', async (req, res) => {
-    const { username, password, repeatPassword } = req.body;
-    if (password === repeatPassword) {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        try {
-            const user = await User.create({ username, password: hashedPassword });
-            console.log('Usuario creado:', user); // Añade un log para verificar
-            req.session.user = { username };
-            res.redirect('/chat');
-        } catch (error) {
-            console.error('Error registrando usuario:', error);
-            res.redirect('/register');
-        }
-    } else {
-        res.redirect('/register');
-    }
-});
-
-app.get('/chat', (req, res) => {
-    if (req.session.user) {
-        // Recuperar usuarios de la base de datos
-        User.findAll()
-            .then(users => {
-                const filteredUsers = users.filter(user => user.username !== req.session.user.username);
-                res.render('chat', {
-                    username: req.session.user.username,
-                    messages: [], // No pasamos ningún mensaje al inicio
-                    users: filteredUsers
-                });
-            })
-            .catch(err => {
-                console.error('Error fetching users:', err);
-                res.status(500).send('Error fetching users');
-            });
-    } else {
-        res.redirect('/');
-    }
-});
-
-app.get('/chat/messages', async (req, res) => {
-    const username = req.query.username;  // Usuario logueado
-    const recipient = req.query.recipient; // Usuario seleccionado
-
-    try {
-        const messages = await Message.findAll({
-            where: {
-                [Op.or]: [
-                    {
-                        userSend: username,
-                        userRecept: recipient
-                    },
-                    {
-                        userSend: recipient,
-                        userRecept: username
-                    }
-                ]
-            },
-            order: [['timestamp', 'ASC']]
-        });
-        res.json({ messages });
-    } catch (error) {
-        console.error('Error fetching messages:', error);
-        res.status(500).json({ error: 'Error fetching messages' });
-    }
-});
-
-app.get('/user', (req, res) => {
-    if (req.session.user) {
-        res.json(req.session.user);
-    } else {
-        res.status(401).send('Unauthorized');
-    }
-});
-
-let users = {};
-let userSocketIds = {};
-
-
-(async () => {
-    try {
-        const allUsers = await User.findAll();
-        allUsers.forEach(user => {
-            users[user.username] = false; // Inicialmente, todos están desconectados
-        });
-    } catch (error) {
-        console.error('Error fetching users:', error);
-    }
-})();
-
-// Manejo del socket
+// Socket.io y lógica de conexión
 io.on('connection', (socket) => {
-    // Enviar la lista actual de usuarios cuando un nuevo cliente se conecta
-    socket.emit('update users', Object.keys(users).map(username => ({
-        username,
-        isOnline: users[username]
-    })));
+    console.log('Un usuario se ha conectado');
+
+    // Enviar la lista actualizada de usuarios cuando un nuevo cliente se conecta
+    socket.emit('update users', getOnlineUsers());
 
     setInterval(() => {
         socket.emit('ping');
@@ -193,13 +113,13 @@ io.on('connection', (socket) => {
     socket.on('pong', () => { });
 
     socket.on('set username', (username) => {
-        users[username] = true; // Marcar al usuario como conectado
-        userSocketIds[username] = socket.id; // Registrar el socket ID
-        const updatedUsers = Object.keys(users).map(user => ({
-            username: user,
-            isOnline: users[user]
-        }));
-        io.emit('update users', updatedUsers); // Enviar la lista actualizada
+        // Asegurarse de que el usuario existe en la lista
+        if (!users[username]) {
+            users[username] = { isOnline: false, socketId: null }; // Agregar el usuario si no existe
+        }
+        users[username].isOnline = true; // Marcar al usuario como conectado
+        users[username].socketId = socket.id; // Registrar el socket ID
+        io.emit('update users', getOnlineUsers()); // Enviar la lista actualizada
     });
 
     // Manejo del mensaje
@@ -249,7 +169,7 @@ io.on('connection', (socket) => {
             // Crear y guardar el mensaje en la base de datos
             await Message.create(messageData);
 
-            const receiverSocketId = userSocketIds[msg.userRecept];
+            const receiverSocketId = users[msg.userRecept]?.socketId;
             if (receiverSocketId) {
                 io.to(receiverSocketId).emit('chat message', messageData);
             }
@@ -262,28 +182,25 @@ io.on('connection', (socket) => {
 
     // Manejo de desconexión
     socket.on('disconnect', () => {
-        const username = Object.keys(userSocketIds).find(key => userSocketIds[key] === socket.id);
+        console.log('Un usuario se ha desconectado');
+        const username = Object.keys(users).find(key => users[key].socketId === socket.id);
         if (username) {
-            users[username] = false; // Marcar al usuario como desconectado
-            delete userSocketIds[username]; // Eliminar el socket ID
-            const updatedUsers = Object.keys(users).map(user => ({
-                username: user,
-                isOnline: users[user]
-            }));
-            io.emit('update users', updatedUsers); // Enviar la lista actualizada
+            users[username].isOnline = false; // Marcar al usuario como desconectado
+            users[username].socketId = null; // Eliminar el socket ID
+            io.emit('update users', getOnlineUsers()); // Enviar la lista actualizada
         }
     });
 });
 
-// Función para obtener los usuarios en línea
+// Función para obtener los usuarios en línea y desconectados
 function getOnlineUsers() {
-    return Object.keys(userSocketIds).map(username => ({
+    return Object.keys(users).map(username => ({
         username: username,
-        isOnline: userSocketIds[username].isOnline
+        isOnline: users[username].isOnline // Utilizar la propiedad `isOnline`
     }));
 }
 
-
+// Configuración del servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
