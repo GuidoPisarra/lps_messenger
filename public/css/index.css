@@ -1,0 +1,43 @@
+ .index-body {
+     font-family: Arial, sans-serif;
+     margin: 0;
+     padding: 0;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     height: 100vh;
+     background-color: #0a1014;
+     color: #ddd;
+ }
+
+ .index-titulo {
+     font-size: 3rem;
+     margin-bottom: 20px;
+ }
+
+ .auth-links {
+     display: flex;
+     gap: 20px;
+ }
+
+ a {
+     text-decoration: none;
+     padding: 10px 20px;
+     background-color: #f0f0f0;
+     border: #CF105E;
+     color: #CF105E;
+     border-radius: 5px;
+     font-size: 1.2rem;
+ }
+
+ a:hover {
+     background-color: #CF105E;
+     color: #f0f0f0;
+ }
+
+ .index-imagen {
+     width: 150px;
+     height: auto;
+     margin-bottom: 20px;
+ }
