@@ -124,9 +124,7 @@ io.on('connection', (socket) => {
             text: msg.text,
             userSend: msg.userSend,
             userRecept: msg.userRecept,
-            fileName: null,
-            fileType: null,
-            filePath: null,
+            files: []
         };
 
         // Verificar si hay archivos adjuntos

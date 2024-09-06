@@ -70,40 +70,47 @@ formChat.addEventListener('submit', (event) => {
     const archivos = fileInput.files; // Obtener los archivos seleccionados
 
     if (message.trim() !== '' || archivos.length > 0) {
-        const mensaje = {
-            userSend: window.username,
-            userRecept: recipient,
-            text: message,
-            files: [] // Array para guardar los archivos
-        };
-
-        // Convertir archivos a base64 y agregarlos al mensaje
-        Array.from(archivos).forEach(archivo => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const base64 = event.target.result;
-                mensaje.files.push({
-                    fileName: archivo.name,
-                    fileType: archivo.type,
-                    fileData: base64
-                });
-
-                // Emitir el mensaje cuando todos los archivos estén listos
-                if (mensaje.files.length === archivos.length) {
-                    socket.emit('chat message', mensaje);
-                    input.value = '';
-                    fileInput.value = ''; // Limpiar el input de archivos
-                    contenedorArchivos.innerHTML = ''; // Limpiar el contenedor de miniaturas
-                    contenedorArchivos.style.display = 'none';
-                }
+        // Emitir un mensaje con solo el texto si hay texto
+        if (message.trim() !== '') {
+            const mensajeTexto = {
+                userSend: window.username,
+                userRecept: recipient,
+                text: message,
+                files: [] // Sin archivos en este caso
             };
-            reader.readAsDataURL(archivo); // Leer archivo como base64
-        });
 
-        // Si no hay archivos, emitir inmediatamente
-        if (archivos.length === 0) {
-            socket.emit('chat message', mensaje);
-            input.value = '';
+            socket.emit('chat message', mensajeTexto);
+            input.value = ''; // Limpiar el campo de texto
+        }
+
+        // Emitir un mensaje por cada archivo adjunto
+        if (archivos.length > 0) {
+            Array.from(archivos).forEach(archivo => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    const mensajeArchivo = {
+                        userSend: window.username,
+                        userRecept: recipient,
+                        text: message, // Incluir el texto con el archivo
+                        files: [{
+                            fileName: archivo.name,
+                            fileType: archivo.type,
+                            fileData: base64
+                        }]
+                    };
+
+                    // Emitir el mensaje para cada archivo
+                    socket.emit('chat message', mensajeArchivo);
+                };
+                reader.readAsDataURL(archivo); // Leer archivo como base64
+            });
+
+            // Limpiar los campos y el contenedor de archivos después de enviar
+            fileInput.value = ''; // Limpiar el input de archivos
+            contenedorArchivos.innerHTML = ''; // Limpiar el contenedor de miniaturas
+            contenedorArchivos.style.display = 'none';
         }
     }
 });
+
