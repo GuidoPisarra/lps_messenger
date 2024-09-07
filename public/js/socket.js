@@ -63,10 +63,27 @@ function displayMessage(message) {
         fileLink = `<br/><a href="${fileUrl}" download="${message.fileName}">${message.fileName}</a>`;
     }
 
+    const fechaFormateada = formatoFecha(message.timestamp);
+
     messageElement.innerHTML = `
-        <strong>${message.userSend}</strong>: ${message.text} ${fileLink}
-    `;
+    <strong>${message.userSend}</strong> 
+    <p class="texto-mensaje">${message.text} ${fileLink}</p>
+    <div>
+    <p class="hora-fecha-envio">${fechaFormateada}</p>
+    </div>
+`;
 
     messageContainer.appendChild(messageElement);
     messageContainer.scrollTop = messageContainer.scrollHeight;
+}
+
+function formatoFecha(timestamp) {
+    const fecha = new Date(timestamp);
+    const dia = String(fecha.getUTCDate()).padStart(2, '0');
+    const mes = String(fecha.getUTCMonth() + 1).padStart(2, '0');
+    const anio = fecha.getUTCFullYear();
+    const hora = String(fecha.getUTCHours()).padStart(2, '0');
+    const minutos = String(fecha.getUTCMinutes()).padStart(2, '0');
+
+    return `${dia}/${mes}/${anio} ${hora}:${minutos}`;
 }
