@@ -152,9 +152,9 @@ main {
 .lista-usuarios {
     width: 25%;
     background-color: #313131;
-    border-right: 1px solid #ccc;
+    border-right: 1px solid #CF105E;
     color: #ddd;
-    border: 1px solid #ccc;
+    border: 1px solid #CF105E;
     border-radius: 0px 5px 5px 0px;
     overflow: hidden;
     padding: 10px;
@@ -185,7 +185,7 @@ main {
     display: flex;
     align-items: center;
     padding: 10px;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #CF105E;
     transition: background-color 0.3s;
 }
 
