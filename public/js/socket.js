@@ -35,7 +35,7 @@ fetch('/user')
                         <div class="user-info">
                             <span class="username">${user.username}</span>
                             <span class="online-status ${user.isOnline ? 'online' : 'offline'}">
-                                ${user.isOnline ? 'Conectado' : 'Desconectado'}
+                                ${user.isOnline ? 'En línea' : 'Desconectado'}
                             </span>
                         </div>
                     </a>

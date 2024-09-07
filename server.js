@@ -172,7 +172,6 @@ io.on('connection', (socket) => {
 
     // Manejo de desconexión
     socket.on('disconnect', () => {
-        console.log('Un usuario se ha desconectado');
         const username = Object.keys(users).find(key => users[key].socketId === socket.id);
         if (username) {
             users[username].isOnline = false;

@@ -4,7 +4,7 @@ body {
     padding: 0;
     display: flex;
     flex-direction: column;
-    height: 95vh;
+    height: 100vh;
     background-color: #0a1014;
 }
 
@@ -58,6 +58,14 @@ button {
 
 button:hover {
     background-color: #45a049;
+}
+
+nav {
+    height: 2rem;
+    padding: 10px 25px 5px 5px;
+    display: flex;
+    flex-direction: row-reverse;
+    background-color: #313131;
 }
 
 #input-message {
@@ -147,7 +155,7 @@ main {
     border-right: 1px solid #ccc;
     color: #ddd;
     border: 1px solid #ccc;
-    border-radius: 5px;
+    border-radius: 0px 5px 5px 0px;
     overflow: hidden;
     padding: 10px;
     box-sizing: border-box;
@@ -304,4 +312,8 @@ ul::-webkit-scrollbar-track {
 
 .form-chat {
     margin-top: 20px;
+}
+
+.icono-salir {
+    height: 100%;
 }
